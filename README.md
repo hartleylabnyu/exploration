@@ -4,7 +4,7 @@ Tasks, anonymized data, and analysis code for *Novelty and uncertainty different
 
 
 ## Task
-We collected data from 122 participants on an explore-exploit decision-making task that decouples novelty and uncertainty. The original adult version of the task is described in [Cockburn et al., (2022)](https://www.cell.com/neuron/fulltext/S0896-6273(22)00502-5?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS0896627322005025%3Fshowall%3Dtrue).
+We collected data from 122 participants on an explore-exploit decision-making task that decouples novelty and uncertainty. The original adult version of the task is described in [Cockburn et al. (2022)](https://www.cell.com/neuron/fulltext/S0896-6273(22)00502-5?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS0896627322005025%3Fshowall%3Dtrue).
 
 The version of the task included in this repository is framed within a child-friendly narrative and includes fewer stimuli and trials per block than the original version. It can be run via Psychtoolbox in Matlab Version 2020. 
 
