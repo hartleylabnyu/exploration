@@ -6,6 +6,7 @@ git_repo.Rproj
 .Rproj.user/
 .RData
 analysis_code/explo_analyses_cache/
+analysis_code/explo_analyses.html
 
 # Ignore recoverability folder 
 simulation_and_recovery_code/
