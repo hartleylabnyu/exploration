@@ -1,0 +1,14 @@
+# Ignore Mac system files
+.DS_store
+
+# Ignore R project and R project files
+git_repo.Rproj
+.Rproj.user/
+.RData
+analysis_code/explo_analyses_cache/
+
+# Ignore recoverability folder 
+simulation_and_recovery_code/
+
+# Ignore recoverability analyses 
+analysis_code/explo_recoverability.Rmd
