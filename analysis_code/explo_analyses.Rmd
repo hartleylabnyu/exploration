@@ -165,15 +165,22 @@ pander(ageStats2)
 
 ## Relation between age and IQ
 ```{r model age IQ correlation}
-demographicData$ageScaled <- scale_this(demographicData$age)
-demographicData$IQScaled <- scale_this(demographicData$IQ)
+#select relevant variables
+demographicData.filtered <- demographicData %>%
+    select(c(age, IQ)) %>%
+    drop_na()
 
-age.IQ.lm <- lm(IQScaled ~ ageScaled, data = demographicData)
+#scale
+demographicData.filtered$ageScaled <- scale_this(demographicData.filtered$age)
+demographicData.filtered$IQScaled <- scale_this(demographicData.filtered$IQ)
+
+
+age.IQ.lm <- lm(IQScaled ~ ageScaled, data = demographicData.filtered)
 pander(age.IQ.lm)
 ```
 
 ```{r plot age and IQ}
-age_IQ_plot <- ggplot(demographicData, aes(x = age, y = IQ)) +
+age_IQ_plot <- ggplot(demographicData.filtered, aes(x = age, y = IQ)) +
     geom_point(color = color1) +
     geom_smooth(method = "lm", color = color2, fill = color2) +
     xlab("Age") +
@@ -290,15 +297,20 @@ reward_earned <- exploAll %>%
     group_by(subID, age, IQ, blockDifficulty) %>%
     summarize(total_reward = sum(reward, na.rm = T))
 
+#filter data
+reward_earned.filtered <- reward_earned %>%
+    select(total_reward, age, blockDifficulty) %>%
+    drop_na()
+
 #scale age and reward
-reward_earned$ageScaled <- scale_this(reward_earned$age)
-reward_earned$rewardScaled <- scale_this(reward_earned$total_reward)
+reward_earned.filtered$ageScaled <- scale_this(reward_earned.filtered$age)
+reward_earned.filtered$rewardScaled <- scale_this(reward_earned.filtered$total_reward)
 
 #set sum contrasts
 options(contrasts = rep("contr.sum", 2))
 
 #run model
-reward.age.blockDiff.lm <- lm(rewardScaled ~ ageScaled * blockDifficulty, data = reward_earned)
+reward.age.blockDiff.lm <- lm(rewardScaled ~ ageScaled * blockDifficulty, data = reward_earned.filtered)
 pander(summary(reward.age.blockDiff.lm))
 # main effect of age
 # no effect of block difficulty
@@ -309,7 +321,8 @@ pander(summary(reward.age.blockDiff.lm))
 ```{r reward earned age model with IQ}
 #filter IQ
 reward_earned_IQ <- reward_earned %>%
-    filter(IQ > 0)
+    select(IQ, age, total_reward, blockDifficulty) %>%
+    drop_na()
 
 #scale variables
 reward_earned_IQ$ageScaled <- scale_this(reward_earned_IQ$age)
@@ -452,13 +465,19 @@ opt_choices <- choice_type %>%
     mutate(blockDifficulty = factor(blockDifficulty)) %>%
     drop_na()
 
+#select variables and filter
+opt_choices.filtered <- opt_choices %>%
+    select(opt_choice, age, blockDifficulty, trialID, subID) %>%
+    drop_na()
+
 #scale variables
-opt_choices$ageScaled <- scale_this(opt_choices$age)
-opt_choices$trialScaled <- scale_this(opt_choices$trialID)
+opt_choices.filtered$ageScaled <- scale_this(opt_choices.filtered$age)
+opt_choices.filtered$trialScaled <- scale_this(opt_choices.filtered$trialID)
+
 
 optChoice.age.model <- mixed(opt_choice ~ ageScaled * blockDifficulty * trialScaled + 
                                  (blockDifficulty + trialScaled | subID), 
-                             data = opt_choices,
+                             data = opt_choices.filtered,
                              family = "binomial",
                              method = "LRT",
                              control = glmerControl(optimizer = "bobyqa"),
@@ -480,14 +499,20 @@ optChoice.age.model
 opt_choices_IQ <- opt_choices %>%
     filter(IQ > 0)
 
+#select variables and filter
+opt_choices_IQ.filtered <- opt_choices_IQ %>%
+    select(opt_choice, age, blockDifficulty, trialID, IQ, subID) %>%
+    drop_na()
+
 #rescale variables
-opt_choices_IQ$trialScaled <- scale_this(opt_choices_IQ$trialID)
-opt_choices_IQ$ageScaled <- scale_this(opt_choices_IQ$age)
-opt_choices_IQ$IQScaled <- scale_this(opt_choices_IQ$IQ)
+opt_choices_IQ.filtered$trialScaled <- scale_this(opt_choices_IQ.filtered$trialID)
+opt_choices_IQ.filtered$ageScaled <- scale_this(opt_choices_IQ.filtered$age)
+opt_choices_IQ.filtered$IQScaled <- scale_this(opt_choices_IQ.filtered$IQ)
+
 
 optChoice.age.IQ.model <- mixed(opt_choice ~ ageScaled * blockDifficulty * trialScaled * IQScaled + 
                                  (blockDifficulty + trialScaled | subID), 
-                             data = opt_choices_IQ,
+                             data = opt_choices_IQ.filtered,
                              family = "binomial",
                              method = "LRT",
                              control = glmerControl(optimizer = "bobyqa"),
@@ -498,8 +523,8 @@ optChoice.age.IQ.model <- mixed(opt_choice ~ ageScaled * blockDifficulty * trial
 optChoice.age.IQ.model
 
 # main effect of age
-# main effect of IQ
 # main effect of block difficulty
+# main effect of trial
 ```
 
 ## Plot: Optimal choices by age and block difficulty
@@ -530,11 +555,18 @@ hist(exploAll$logRT)
 
 ## Model: RTs by age
 ```{r RT age model}
-exploAll$ageScaled <- scale_this(exploAll$age)
 
+#select variables and filter
+exploAll.filtered <- exploAll %>%
+    select(logRT, age, blockDifficulty, subID) %>%
+    drop_na()
+
+exploAll.filtered$ageScaled <- scale_this(exploAll.filtered$age)
+
+#run model
 RT.age.model <- mixed(logRT ~ ageScaled * blockDifficulty + 
                                  (blockDifficulty | subID), 
-                             data = exploAll,
+                             data = exploAll.filtered,
                              method = "S",
                              control = lmerControl(optimizer = "bobyqa"),
                              expand_re = T)
@@ -547,12 +579,19 @@ RT.age.model
 exploAll_IQ <- exploAll %>%
     filter(IQ > 0)
 
-exploAll_IQ$ageScaled <- scale_this(exploAll_IQ$age)
-exploAll_IQ$IQScaled <- scale_this(exploAll_IQ$IQ)
+#select variables and filter
+exploAll_IQ.filtered <- exploAll_IQ %>%
+    select(logRT, age, blockDifficulty, IQ, subID) %>%
+    drop_na()
+
+exploAll_IQ.filtered$ageScaled <- scale_this(exploAll_IQ.filtered$age)
+exploAll_IQ.filtered$IQScaled <- scale_this(exploAll_IQ.filtered$IQ)
+
+
 
 RT.age.IQ.model <- mixed(logRT ~ ageScaled * blockDifficulty *IQScaled + 
                                  (blockDifficulty | subID), 
-                             data = exploAll_IQ,
+                             data = exploAll_IQ.filtered,
                              method = "S",
                              control = lmerControl(optimizer = "bobyqa"),
                              expand_re = T)
@@ -661,7 +700,6 @@ data.model <- data.all %>%
           IQ,
           RT)
     
-
 # compute difference in left - right option feature values 
 data.model$evDiff = data.model$ev_1 - data.model$ev_2
 data.model$varDiff = data.model$var_1 - data.model$var_2
@@ -693,16 +731,7 @@ data.model <- data.model %>%
                                        ev_1 < ev_2 & leftChoice == 1 ~ 0,
                                        ev_1 < ev_2 & leftChoice == 0 ~ 1))
 
-#scale feature values
-data.model$evDiffScaled = scale_this(data.model$evDiff)
-data.model$varDiffScaled = scale_this(data.model$varDiff)
-data.model$novelDiffScaled = scale_this(data.model$novelDiff)
-data.model$evDiffNoResetScaled = scale_this(data.model$evDiff_noReset)
 
-# scale number of stimuli, and trial number
-data.model$scaledNumBlockStims = scale_this(data.model$numBlockStims)
-data.model$scaledTrialNum = scale_this(data.model$trialID)
-data.model$ageScaled <- scale_this(data.model$age)
 ```
 
 ```{r compute value, uncertainty, and novelty means}
@@ -899,6 +928,18 @@ equalEVplot
 
 ## Model: Influence of age, value, uncertainty, and novelty on choice
 ```{r choice features model: age}
+
+#select variables
+data.model.1 <- data.model %>%
+    select(c(leftChoice, evDiff, varDiff, novelDiff, age, subID)) %>%
+    drop_na()
+
+#scale continuous variables
+data.model.1$evDiffScaled = scale_this(data.model.1$evDiff)
+data.model.1$varDiffScaled = scale_this(data.model.1$varDiff)
+data.model.1$novelDiffScaled = scale_this(data.model.1$novelDiff)
+data.model.1$ageScaled <- scale_this(data.model.1$age)
+
 feature.age.model <- mixed(leftChoice ~ 
                                evDiffScaled + 
                                varDiffScaled + 
@@ -906,13 +947,15 @@ feature.age.model <- mixed(leftChoice ~
                                evDiffScaled:ageScaled +
                                varDiffScaled:ageScaled + 
                                novelDiffScaled:ageScaled +
-                               (evDiffScaled + varDiffScaled + novelDiffScaled | subID),
-                   data.model, 
+                               (evDiffScaled + varDiffScaled + novelDiffScaled || subID),
+                   data.model.1, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
                    expand_re = T)
 feature.age.model 
+
+#note: did not converge w/ correlated random effects
 ```
 
 ```{r plot model effects: age}
@@ -935,10 +978,10 @@ plot_model(feature.age.model,
 
 ## Model: Influence of age, IQ, value, uncertainty, and novelty on choice
 ```{r choice features model: age and IQ}
-
 #filter out participants w/o IQ scores (n = 2)
 data.model.IQ <- data.model %>%
-    filter(IQ > 0)
+    select(c(leftChoice, evDiff, varDiff, novelDiff, age, subID, IQ)) %>%
+    drop_na()
 
 #scale continuous variables
 data.model.IQ$evDiffScaled <- scale_this(data.model.IQ$evDiff)
@@ -946,6 +989,7 @@ data.model.IQ$varDiffScaled <- scale_this(data.model.IQ$varDiff)
 data.model.IQ$novelDiffScaled <- scale_this(data.model.IQ$novelDiff)
 data.model.IQ$ageScaled <- scale_this(data.model.IQ$age)
 data.model.IQ$IQScaled <- scale_this(data.model.IQ$IQ)
+
 
 feature.age.IQ.model <- mixed(leftChoice ~ 
                                evDiffScaled + 
@@ -967,6 +1011,8 @@ feature.age.IQ.model <- mixed(leftChoice ~
                    control = glmerControl(optimizer = "bobyqa"),
                    expand_re = T)
 feature.age.IQ.model
+
+summary(feature.age.IQ.model)
 ```
 
 ```{r plot model effects: age and IQ}
@@ -996,6 +1042,19 @@ plot_model(feature.age.IQ.model,
 
 ## Model: Influence of age, trial, value, uncertainty, and novelty on choice
 ```{r choice features model: age and within-block trial}
+#select variables
+data.model.3 <- data.model %>%
+    select(c(leftChoice, evDiff, varDiff, novelDiff, age, subID, trialID)) %>%
+    drop_na()
+
+#scale continuous variables
+data.model.3$evDiffScaled <- scale_this(data.model.3$evDiff)
+data.model.3$varDiffScaled <- scale_this(data.model.3$varDiff)
+data.model.3$novelDiffScaled <- scale_this(data.model.3$novelDiff)
+data.model.3$ageScaled <- scale_this(data.model.3$age)
+data.model.3$scaledTrialNum <- scale_this(data.model.3$trialID)
+
+#run model
 feature.age.trial.model = mixed(leftChoice ~ 
                                     evDiffScaled + 
                                     varDiffScaled + 
@@ -1012,12 +1071,14 @@ feature.age.trial.model = mixed(leftChoice ~
                                     (evDiffScaled + 
                                          varDiffScaled + 
                                          novelDiffScaled | subID),
-                   data.model, 
+                   data.model.3, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
                    expand_re = T)
 feature.age.trial.model
+
+summary(feature.age.trial.model)
 ```
 
 ```{r plot model effects: age and trial}
@@ -1098,16 +1159,18 @@ horizon_plot
 
 ## Model: Influence of trial, value, uncertainty, and novelty on choice - kids only
 ```{r choice features model: age and within-block trial kids only}
-
 data.model.children <- data.model %>%
-    filter(ageGroup3 == "Children")
+    filter(ageGroup3 == "Children") %>%
+    select(leftChoice, evDiff, varDiff, novelDiff, subID, trialID) %>%
+    drop_na()
 
-
+#scale variables
 data.model.children$evDiffScaled <- scale_this(data.model.children$evDiff)
 data.model.children$varDiffScaled <- scale_this(data.model.children$varDiff)
 data.model.children$novelDiffScaled <- scale_this(data.model.children$novelDiff)
 data.model.children$scaledTrialNum <- scale_this(data.model.children$trialID)
 
+#run model
 feature.children.trial.model = mixed(leftChoice ~ 
                                     evDiffScaled + 
                                     varDiffScaled + 
@@ -1125,11 +1188,20 @@ feature.children.trial.model
 ```
 
 
-
 ## Model: Influence of age, quadratic age, value, uncertainty, and novelty on choice
 ```{r choice features model: age and quadratic age}
-#add quadratic age
-data.model$ageSquaredScaled <- scale_this(data.model$age^2)
+
+#select variables
+data.model.4 <- data.model %>%
+    select(c(leftChoice, evDiff, varDiff, novelDiff, age, subID)) %>%
+    drop_na()
+
+#scale continuous variables
+data.model.4$evDiffScaled <- scale_this(data.model.4$evDiff)
+data.model.4$varDiffScaled <- scale_this(data.model.4$varDiff)
+data.model.4$novelDiffScaled <- scale_this(data.model.4$novelDiff)
+data.model.4$ageScaled <- scale_this(data.model.4$age)
+data.model.4$ageSquaredScaled <- scale_this(data.model.4$age^2)
 
 feature.quad_age.model <- mixed(leftChoice ~ 
                                evDiffScaled + 
@@ -1142,7 +1214,7 @@ feature.quad_age.model <- mixed(leftChoice ~
                                varDiffScaled:ageSquaredScaled + 
                                novelDiffScaled:ageSquaredScaled +
                                (evDiffScaled + varDiffScaled + novelDiffScaled | subID),
-                   data.model, 
+                   data.model.4, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1174,27 +1246,42 @@ plot_model(feature.quad_age.model,
 
 ## Model: Influence of age, quadratic age, IQ, value, uncertainty, and novelty on choice
 ```{r choice features model: age, quadratic age, and IQ}
-data.model.IQ$ageSquaredScaled  <- scale_this((data.model.IQ$age)^2)
+
+#select variables
+data.model.5 <- data.model %>%
+    select(c(leftChoice, evDiff, varDiff, novelDiff, age, subID, IQ)) %>%
+    drop_na()
+
+#scale continuous variables
+data.model.5$evDiffScaled <- scale_this(data.model.5$evDiff)
+data.model.5$varDiffScaled <- scale_this(data.model.5$varDiff)
+data.model.5$novelDiffScaled <- scale_this(data.model.5$novelDiff)
+data.model.5$ageScaled <- scale_this(data.model.5$age)
+data.model.5$ageSquaredScaled <- scale_this(data.model.5$age^2)
+data.model.5$IQScaled <- scale_this(data.model.5$IQ)
+
 
 feature.quad_age.IQ.model = mixed(leftChoice ~ 
                                     evDiffScaled + 
                                     varDiffScaled + 
                                     novelDiffScaled +
-                                    evDiffScaled:ageScaled +
-                                    evDiffScaled:IQScaled +
-                                    evDiffScaled:IQScaled:ageScaled +
-                                    evDiffScaled:IQScaled:ageSquaredScaled +
+                                    evDiffScaled:ageScaled + 
                                     varDiffScaled:ageScaled + 
-                                    varDiffScaled:ageSquaredScaled + 
-                                    varDiffScaled:IQScaled +
-                                    varDiffScaled:IQScaled:ageScaled +
-                                    varDiffScaled:IQScaled:ageSquaredScaled +
                                     novelDiffScaled:ageScaled +
+                                      evDiffScaled:ageSquaredScaled + 
+                                    varDiffScaled:ageSquaredScaled + 
+                                    novelDiffScaled:ageSquaredScaled +
+                                    evDiffScaled:IQScaled +
+                                    varDiffScaled:IQScaled +
                                     novelDiffScaled:IQScaled +
-                                    novelDiffScaled:IQScaled:ageScaled +
-                                    novelDiffScaled:IQScaled:ageSquaredScaled +
+                                     evDiffScaled:ageScaled:IQScaled + 
+                                    varDiffScaled:ageScaled:IQScaled + 
+                                    novelDiffScaled:ageScaled:IQScaled +
+                                      evDiffScaled:ageSquaredScaled:IQScaled + 
+                                    varDiffScaled:ageSquaredScaled:IQScaled + 
+                                    novelDiffScaled:ageSquaredScaled:IQScaled +
                                 ((evDiffScaled + varDiffScaled + novelDiffScaled) | subID),
-                   data.model.IQ, 
+                   data.model.5, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1202,26 +1289,30 @@ feature.quad_age.IQ.model = mixed(leftChoice ~
 
 feature.quad_age.IQ.model
 
+summary(feature.quad_age.IQ.model)
+
 # main effects of EV, uncertainty, novelty
 # EV x age
 # EV x IQ
 # marginal uncertainty x age 
 # novelty x IQ
 # novelty x age x IQ
-# novelty x age x quadratic age
+# novelty x IQ x quadratic age
 ```
 
 ## Model: Influence of age, value, overall value (no reset), uncertainty, and novelty on choice
 ```{r choice features model: age, no reset value}
-data.model.noReset <- data.model %>%
-    filter(blockID > 1)
+data.model.6  <- data.model %>%
+    filter(blockID > 1) %>%
+    select(c(leftChoice, evDiff, varDiff, novelDiff, age, subID, evDiff_noReset)) %>%
+    drop_na()
 
-#rescale variables
-data.model.noReset$evDiffScaled <- scale_this(data.model.noReset$evDiffScaled)
-data.model.noReset$varDiffScaled <- scale_this(data.model.noReset$varDiffScaled)
-data.model.noReset$novelDiffScaled <- scale_this(data.model.noReset$novelDiffScaled)
-data.model.noReset$evDiffNoResetScaled <- scale_this(data.model.noReset$evDiffNoResetScaled)
-data.model.noReset$ageScaled <- scale_this(data.model.noReset$ageScaled)
+#scale continuous variables
+data.model.6$evDiffScaled <- scale_this(data.model.6$evDiff)
+data.model.6$varDiffScaled <- scale_this(data.model.6$varDiff)
+data.model.6$novelDiffScaled <- scale_this(data.model.6$novelDiff)
+data.model.6$ageScaled <- scale_this(data.model.6$age)
+data.model.6$evDiffNoResetScaled <- scale_this(data.model.6$evDiff_noReset)
 
 #run model
 feature.age.no_reset_EV.model <- mixed(leftChoice ~ 
@@ -1232,19 +1323,20 @@ feature.age.no_reset_EV.model <- mixed(leftChoice ~
                                evDiffScaled:ageScaled +
                                varDiffScaled:ageScaled + 
                                novelDiffScaled:ageScaled +
-                                evDiffNoResetScaled:ageScaled + 
-                               (evDiffScaled + varDiffScaled + novelDiffScaled + evDiffNoResetScaled | subID),
-                   data.model.noReset, 
+                               evDiffNoResetScaled:ageScaled + 
+                               (evDiffScaled + varDiffScaled + novelDiffScaled + evDiffNoResetScaled || subID),
+                   data.model.6, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
                    expand_re = T)
 feature.age.no_reset_EV.model
 
-#main effect of EV_no_reset
-#no age x EV_no_reset interaction
-```
+#singular fit w/ correlation in RE
 
+# main effect of EV_no_reset
+# no age x EV_no_reset interaction
+```
 
 ```{r model comparison evDiffNoReset vs. evDiff}
 feature.age.no_reset_EV.model <- mixed(leftChoice ~ 
@@ -1254,8 +1346,8 @@ feature.age.no_reset_EV.model <- mixed(leftChoice ~
                                varDiffScaled:ageScaled + 
                                novelDiffScaled:ageScaled +
                                evDiffNoResetScaled:ageScaled + 
-                               (varDiffScaled + novelDiffScaled + evDiffNoResetScaled | subID),
-                   data.model.noReset, 
+                               (varDiffScaled + novelDiffScaled + evDiffNoResetScaled || subID),
+                   data.model.6, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1269,8 +1361,8 @@ feature.age.EV.model <- mixed(leftChoice ~
                                evDiffScaled:ageScaled +
                                varDiffScaled:ageScaled + 
                                novelDiffScaled:ageScaled +
-                               (evDiffScaled + varDiffScaled + novelDiffScaled | subID),
-                   data.model.noReset, 
+                               (evDiffScaled + varDiffScaled + novelDiffScaled || subID),
+                   data.model.6, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1288,7 +1380,7 @@ feature.age.EV.no_reset_EV.model <- mixed(leftChoice ~
                                evDiffNoResetScaled:ageScaled + 
                                evDiffScaled:ageScaled +
                                (varDiffScaled + novelDiffScaled + evDiffNoResetScaled + evDiffScaled | subID),
-                   data.model.noReset, 
+                   data.model.6, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1304,24 +1396,25 @@ anova(feature.age.EV.model, feature.age.EV.no_reset_EV.model)
 ```
 
 ```{r model comparison evDiffNoReset vs. evDiff children}
-data.model.noReset <- data.model %>%
+data.model.7 <- data.model %>%
     filter(blockID > 1) %>%
-    filter(ageGroup3 == "Children")
+    filter(ageGroup3 == "Children") %>%
+    select(c(leftChoice, evDiff, varDiff, novelDiff, subID, evDiff_noReset)) %>%
+    drop_na()
 
-#rescale variables
-data.model.noReset$evDiffScaled <- scale_this(data.model.noReset$evDiffScaled)
-data.model.noReset$varDiffScaled <- scale_this(data.model.noReset$varDiffScaled)
-data.model.noReset$novelDiffScaled <- scale_this(data.model.noReset$novelDiffScaled)
-data.model.noReset$evDiffNoResetScaled <- scale_this(data.model.noReset$evDiffNoResetScaled)
-data.model.noReset$ageScaled <- scale_this(data.model.noReset$ageScaled)
+#scale continuous variables
+data.model.7$evDiffScaled <- scale_this(data.model.7$evDiff)
+data.model.7$varDiffScaled <- scale_this(data.model.7$varDiff)
+data.model.7$novelDiffScaled <- scale_this(data.model.7$novelDiff)
+data.model.7$evDiffNoResetScaled <- scale_this(data.model.7$evDiff_noReset)
 
 
 feature.age.no_reset_EV.model.children <- mixed(leftChoice ~ 
                                varDiffScaled + 
                                novelDiffScaled +
                                evDiffNoResetScaled + 
-                               (varDiffScaled + novelDiffScaled + evDiffNoResetScaled | subID),
-                   data.model.noReset, 
+                               (varDiffScaled + novelDiffScaled + evDiffNoResetScaled || subID),
+                   data.model.7, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1332,13 +1425,15 @@ feature.age.EV.model.children <- mixed(leftChoice ~
                                evDiffScaled + 
                                varDiffScaled + 
                                novelDiffScaled +
-                               (evDiffScaled + varDiffScaled + novelDiffScaled | subID),
-                   data.model.noReset, 
+                               (evDiffScaled + varDiffScaled + novelDiffScaled || subID),
+                   data.model.7, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
                    expand_re = T,
                    return = "merMod")
+
+#singular fit w/ correlated REs
 
 #compare models
 anova(feature.age.EV.model.children, feature.age.no_reset_EV.model.children)
@@ -1347,23 +1442,24 @@ anova(feature.age.EV.model.children, feature.age.no_reset_EV.model.children)
 
 
 ```{r model comparison evDiffNoReset vs. evDiff adolescents}
-data.model.noReset <- data.model %>%
+data.model.7 <- data.model %>%
     filter(blockID > 1) %>%
-    filter(ageGroup3 == "Adolescents")
+    filter(ageGroup3 == "Adolescents") %>%
+    select(c(leftChoice, evDiff, varDiff, novelDiff, subID, evDiff_noReset)) %>%
+    drop_na()
 
-#rescale variables
-data.model.noReset$evDiffScaled <- scale_this(data.model.noReset$evDiffScaled)
-data.model.noReset$varDiffScaled <- scale_this(data.model.noReset$varDiffScaled)
-data.model.noReset$novelDiffScaled <- scale_this(data.model.noReset$novelDiffScaled)
-data.model.noReset$evDiffNoResetScaled <- scale_this(data.model.noReset$evDiffNoResetScaled)
-data.model.noReset$ageScaled <- scale_this(data.model.noReset$ageScaled)
+#scale continuous variables
+data.model.7$evDiffScaled <- scale_this(data.model.7$evDiff)
+data.model.7$varDiffScaled <- scale_this(data.model.7$varDiff)
+data.model.7$novelDiffScaled <- scale_this(data.model.7$novelDiff)
+data.model.7$evDiffNoResetScaled <- scale_this(data.model.7$evDiff_noReset)
 
 feature.age.no_reset_EV.model.adolescents <- mixed(leftChoice ~ 
                                varDiffScaled + 
                                novelDiffScaled +
                                evDiffNoResetScaled + 
-                               (varDiffScaled + novelDiffScaled + evDiffNoResetScaled | subID),
-                   data.model.noReset, 
+                               (varDiffScaled + novelDiffScaled + evDiffNoResetScaled || subID),
+                   data.model.7, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1374,8 +1470,8 @@ feature.age.EV.model.adolescents <- mixed(leftChoice ~
                                evDiffScaled + 
                                varDiffScaled + 
                                novelDiffScaled +
-                               (evDiffScaled + varDiffScaled + novelDiffScaled | subID),
-                   data.model.noReset, 
+                               (evDiffScaled + varDiffScaled + novelDiffScaled || subID),
+                   data.model.7, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1388,24 +1484,25 @@ anova(feature.age.EV.model.adolescents, feature.age.no_reset_EV.model.adolescent
 ```
 
 ```{r model comparison evDiffNoReset vs. evDiff adults}
-data.model.noReset <- data.model %>%
+data.model.7 <- data.model %>%
     filter(blockID > 1) %>%
-    filter(ageGroup3 == "Adults")
+    filter(ageGroup3 == "Adults") %>%
+    select(c(leftChoice, evDiff, varDiff, novelDiff, subID, evDiff_noReset)) %>%
+    drop_na()
 
-#rescale variables
-data.model.noReset$evDiffScaled <- scale_this(data.model.noReset$evDiffScaled)
-data.model.noReset$varDiffScaled <- scale_this(data.model.noReset$varDiffScaled)
-data.model.noReset$novelDiffScaled <- scale_this(data.model.noReset$novelDiffScaled)
-data.model.noReset$evDiffNoResetScaled <- scale_this(data.model.noReset$evDiffNoResetScaled)
-data.model.noReset$ageScaled <- scale_this(data.model.noReset$ageScaled)
+#scale continuous variables
+data.model.7$evDiffScaled <- scale_this(data.model.7$evDiff)
+data.model.7$varDiffScaled <- scale_this(data.model.7$varDiff)
+data.model.7$novelDiffScaled <- scale_this(data.model.7$novelDiff)
+data.model.7$evDiffNoResetScaled <- scale_this(data.model.7$evDiff_noReset)
 
 
 feature.age.no_reset_EV.model.adults <- mixed(leftChoice ~ 
                                varDiffScaled + 
                                novelDiffScaled +
                                evDiffNoResetScaled + 
-                               (varDiffScaled + novelDiffScaled + evDiffNoResetScaled | subID),
-                   data.model.noReset, 
+                               (varDiffScaled + novelDiffScaled + evDiffNoResetScaled || subID),
+                   data.model.7, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1416,8 +1513,8 @@ feature.age.EV.model.adults <- mixed(leftChoice ~
                                evDiffScaled + 
                                varDiffScaled + 
                                novelDiffScaled +
-                               (evDiffScaled + varDiffScaled + novelDiffScaled | subID),
-                   data.model.noReset, 
+                               (evDiffScaled + varDiffScaled + novelDiffScaled || subID),
+                   data.model.7, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1429,9 +1526,9 @@ anova(feature.age.EV.model.adults, feature.age.no_reset_EV.model.adults)
 # EV model fits better
 ```
 
+
 ## Model: Influence of value, novelty, and uncertainty of selected option on RT
 ```{r RT by selected option features}
-
 #compute features of selected options
 data.model <- data.model %>%
     mutate(selectedUncertainty = case_when(selectedStimID == trialStimID_1 ~ var_1,
@@ -1441,14 +1538,20 @@ data.model <- data.model %>%
            selectedNovelty = case_when(selectedStimID == trialStimID_1 ~ novel_1,
                                            selectedStimID == trialStimID_2 ~ novel_2))
 
+#select relevant variables
+data.model.8 <- data.model %>%
+    select(c(RT, selectedUncertainty, selectedValue, selectedNovelty,
+             age, subID)) %>%
+    drop_na()
+    
 
-#scale
-data.model$selectedUncertainty <- scale_this(data.model$selectedUncertainty)
-data.model$selectedValue <- scale_this(data.model$selectedValue)
-data.model$selectedNovelty <- scale_this(data.model$selectedNovelty)
-data.model$evDiffScaled <- scale_this(data.model$evDiffScaled)
-data.model$ageScaled <- scale_this(data.model$ageScaled)
-data.model$logRT <- log(data.model$RT)
+#scale continuous variables
+data.model.8$selectedUncertainty <- scale_this(data.model.8$selectedUncertainty)
+data.model.8$selectedValue <- scale_this(data.model.8$selectedValue)
+data.model.8$selectedNovelty <- scale_this(data.model.8$selectedNovelty)
+data.model.8$ageScaled <- scale_this(data.model.8$age)
+data.model.8$logRT <- log(data.model$RT)
+
 
 #run model
 selectedUncertainty.age.model.RT <- mixed(logRT ~ 
@@ -1460,7 +1563,7 @@ selectedUncertainty.age.model.RT <- mixed(logRT ~
                                     selectedNovelty:ageScaled +
                                         ageScaled + 
                                (selectedUncertainty + selectedValue + selectedNovelty | subID),
-                   data.model, 
+                   data.model.8, 
                    method = "S",
                    control = lmerControl(optimizer = "bobyqa"),
                    expand_re = T)
@@ -1477,8 +1580,19 @@ selectedUncertainty.age.model.RT
 ## Model: Influence of value, novelty, and uncertainty of selected option on RT (w/ trial number)
 ```{r RT by features of selected option w/ trial number}
 
-#scale trial number
-data.model$trialScaled <- scale_this(data.model$trialID)
+#select data
+data.model.9 <- data.model %>%
+    select(c(RT, selectedUncertainty, selectedValue, selectedNovelty,
+             age, subID, trialID)) %>%
+    drop_na()
+
+#scale continuous variables
+data.model.9$selectedUncertainty <- scale_this(data.model.9$selectedUncertainty)
+data.model.9$selectedValue <- scale_this(data.model.9$selectedValue)
+data.model.9$selectedNovelty <- scale_this(data.model.9$selectedNovelty)
+data.model.9$ageScaled <- scale_this(data.model.9$age)
+data.model.9$trialScaled <- scale_this(data.model.9$trialID)
+data.model.9$logRT <- log(data.model.9$RT)
 
 #run model
 selectedUncertainty.age.model.trial.RT <- mixed(logRT ~ 
@@ -1491,7 +1605,7 @@ selectedUncertainty.age.model.trial.RT <- mixed(logRT ~
                                         ageScaled + 
                                         trialScaled + 
                                (selectedUncertainty + selectedValue + selectedNovelty | subID),
-                   data.model, 
+                   data.model.9, 
                    method = "S",
                    control = lmerControl(optimizer = "bobyqa"),
                    expand_re = T)
@@ -1508,16 +1622,20 @@ selectedUncertainty.age.model.trial.RT
 ## Model: Influence of value, novelty, and uncertainty of selected option on RT in children
 ```{r RT by features of selected option - kids only}
 
-data.model.children <- data.model %>%
-    filter(ageGroup3 == "Children")
+#select data
+data.model.10 <- data.model %>%
+    filter(ageGroup3 == "Children") %>%
+    select(c(RT, selectedUncertainty, selectedValue, selectedNovelty,
+             age, subID)) %>%
+    drop_na()
 
-#scale
-data.model.children$selectedUncertainty <- scale_this(data.model.children$selectedUncertainty)
-data.model.children$selectedValue <- scale_this(data.model.children$selectedValue)
-data.model.children$selectedNovelty <- scale_this(data.model.children$selectedNovelty)
-data.model.children$evDiffScaled <- scale_this(data.model.children$evDiffScaled)
-data.model.children$ageScaled <- scale_this(data.model.children$ageScaled)
-data.model.children$trialScaled <- scale_this(data.model.children$trialID)
+#scale continuous variables
+data.model.10$selectedUncertainty <- scale_this(data.model.10$selectedUncertainty)
+data.model.10$selectedValue <- scale_this(data.model.10$selectedValue)
+data.model.10$selectedNovelty <- scale_this(data.model.10$selectedNovelty)
+data.model.10$ageScaled <- scale_this(data.model.10$age)
+data.model.10$logRT <- log(data.model.10$RT)
+
 
 selectedUncertainty.model.logRT.children <- mixed(logRT ~ 
                                     selectedUncertainty +
@@ -1527,8 +1645,8 @@ selectedUncertainty.model.logRT.children <- mixed(logRT ~
                                     selectedValue:ageScaled +
                                     selectedNovelty:ageScaled +
                                         ageScaled +
-                               (selectedUncertainty + selectedValue + selectedNovelty | subID),
-                   data.model.children, 
+                               (selectedUncertainty + selectedValue + selectedNovelty || subID),
+                   data.model.10, 
                    method = "S",
                    control = lmerControl(optimizer = "bobyqa"),
                    expand_re = T)
@@ -1542,18 +1660,33 @@ selectedUncertainty.model.logRT.children
 
 ## Model: Influence of value, novelty, and uncertainty of selected option on RT in children w/ trial number
 ```{r RT by features of selected option - kids only with trial number}
+#select data
+data.model.11 <- data.model %>%
+    filter(ageGroup3 == "Children") %>%
+    select(c(RT, selectedUncertainty, selectedValue, selectedNovelty,
+             age, subID, trialID)) %>%
+    drop_na()
 
+#scale continuous variables
+data.model.11$selectedUncertainty <- scale_this(data.model.11$selectedUncertainty)
+data.model.11$selectedValue <- scale_this(data.model.11$selectedValue)
+data.model.11$selectedNovelty <- scale_this(data.model.11$selectedNovelty)
+data.model.11$ageScaled <- scale_this(data.model.11$age)
+data.model.11$trialScaled <- scale_this(data.model.11$trialID)
+data.model.11$logRT <- log(data.model.11$RT)
+
+#run model
 selectedUncertainty.model.logRT.trial.children <- mixed(logRT ~ 
                                     selectedUncertainty +
                                     selectedValue +
                                     selectedNovelty +
-                                                                            selectedUncertainty:ageScaled +
-                                    selectedValue:ageScaled +
-                                    selectedNovelty:ageScaled +
+                                        selectedUncertainty:ageScaled +
+                                        selectedValue:ageScaled +
+                                        selectedNovelty:ageScaled +
                                         ageScaled +
                                         trialScaled + 
-                               (selectedUncertainty + selectedValue + selectedNovelty | subID),
-                   data.model.children, 
+                               (selectedUncertainty + selectedValue + selectedNovelty || subID),
+                   data.model.11, 
                    method = "S",
                    control = lmerControl(optimizer = "bobyqa"),
                    expand_re = T)
@@ -1575,8 +1708,8 @@ selectedUncertainty.model.logRT.merMod <- mixed(logRT ~
                                     selectedNovelty +
                                     selectedNovelty:ageScaled +
                                         ageScaled + 
-                               (selectedUncertainty + selectedValue + selectedNovelty | subID),
-                   data.model,
+                               (selectedUncertainty + selectedValue + selectedNovelty || subID),
+                   data.model.10,
                    method = "S",
                    control = lmerControl(optimizer = "bobyqa"),
                    expand_re = T,
@@ -1590,6 +1723,7 @@ rt_model_plot
 
 ## Plot: RT by uncertainty of selected option and age
 ```{r rt by selected uncertainty and age, fig.height=4, fig.width=5}
+data.model$logRT <- log(data.model$RT)
 
 rt_selectedUncertainty_plot <- ggplot(data.model, aes(x = selectedUncertainty, y = logRT, color = ageGroup3, fill = ageGroup3)) +
     geom_point(size = .1, alpha = .1) +
@@ -1689,13 +1823,28 @@ ggplot(valueRTMeans, aes(x = valueBin, y = meanLogRT, color = ageGroup3)) +
 ## Do individual differences in uncertainty aversion relate to individual differences in effects of uncertainty on RT?
 ```{r uncertainty aversion RT relation}
 
+data.model.12 <- data.model %>%
+    select(c(leftChoice, RT, selectedUncertainty, selectedValue, selectedNovelty, 
+             evDiff, varDiff, novelDiff, subID)) %>%
+    drop_na()
+
+#scale continuous variables
+data.model.12$selectedUncertainty <- scale_this(data.model.12$selectedUncertainty)
+data.model.12$selectedValue <- scale_this(data.model.12$selectedValue)
+data.model.12$selectedNovelty <- scale_this(data.model.12$selectedNovelty)
+data.model.12$evDiffScaled <- scale_this(data.model.12$evDiff)
+data.model.12$varDiffScaled <- scale_this(data.model.12$varDiff)
+data.model.12$novelDiffScaled <- scale_this(data.model.12$novelDiff)
+data.model.12$logRT <- log(data.model.12$RT)
+
+
 #first, extract uncertainty slope from choice model (w/o age)
 feature.choice.merMod <- mixed(leftChoice ~ 
                                evDiffScaled + 
                                varDiffScaled + 
                                novelDiffScaled +
                                (evDiffScaled + varDiffScaled + novelDiffScaled | subID),
-                   data.model, 
+                   data.model.12, 
                    family = binomial, 
                    method = "LRT",
                    control = glmerControl(optimizer = "bobyqa"),
@@ -1713,7 +1862,7 @@ selectedUncertainty.logRT.merMod <- mixed(logRT ~
                                     selectedValue +
                                     selectedNovelty +
                                (selectedUncertainty + selectedValue + selectedNovelty | subID),
-                   data.model, 
+                   data.model.12, 
                    method = "S",
                    control = lmerControl(optimizer = "bobyqa"),
                    expand_re = T,
@@ -1751,7 +1900,6 @@ uncertaintyRelation_plot <- ggplot(uncertaintyREs, aes(x = RTUncertaintySlope, y
     ylab("Uncertainty Random Effect (Choice)") +
     explo.theme
 uncertaintyRelation_plot
-
 ```
 
 
