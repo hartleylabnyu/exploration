@@ -5,11 +5,8 @@
 git_repo.Rproj
 .Rproj.user/
 .RData
-analysis_code/explo_analyses_cache/
-analysis_code/explo_analyses.html
-
-# Ignore recoverability folder 
-simulation_and_recovery_code/
-
-# Ignore recoverability analyses 
-analysis_code/explo_recoverability.Rmd
+.Rhistory
+analysis_code/explo_analyses_R1_cache/
+analysis_code/explo_analyses_R1_files/
+analysis_code/explo_analyses_R1.html
+analysis_code/.Rhistory
