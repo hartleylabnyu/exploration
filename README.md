@@ -1,6 +1,6 @@
 # Novelty and uncertainty differentially drive exploration across development
 
-Tasks, anonymized data, and analysis code for *Novelty and uncertainty differentially drive exploration across development (under review).*
+Tasks, anonymized data, and analysis code for [*Novelty and uncertainty differentially drive exploration across development (under review).*](https://psyarxiv.com/pkn7j)
 
 
 ## Task
@@ -12,7 +12,7 @@ The version of the task included in this repository is framed within a child-fri
 All raw data (stored in mat files) can be found in the [data](https://github.com/katenuss/exploration/tree/main/data) folder. This folder also contains processed csv files that were used for analyses.
 
 ## Analysis code
-Raw data was first processed in Matlab, using the code in the [data_processing_code](https://github.com/katenuss/exploration/tree/main/data_processing_code) folder. Processed data was then analyzed in R (see the R markdown file in 'analysis_code').
+Raw data was first processed in Matlab, using the code in the [data_processing_code](https://github.com/katenuss/exploration/tree/main/data_processing_code) folder. Processed data was then analyzed in R (see the R markdown file in 'analysis_code_R1').
 
 ## Computational modeling
 Computational models were fit via the [cbm package](https://github.com/payampiray/cbm). The models used here were originally developed for [Cockburn et al., (2021)](https://www.biorxiv.org/content/10.1101/2021.10.13.464279v1). Modeling code is in the [model_fitting_code](https://github.com/katenuss/exploration/tree/main/model_fitting_code) folder. It relies on the raw mat files.
