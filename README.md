@@ -1,6 +1,6 @@
 # Novelty and uncertainty differentially drive exploration across development
 
-Tasks, anonymized data, and analysis code for [*Novelty and uncertainty differentially drive exploration across development*](https://psyarxiv.com/pkn7j).
+Tasks, anonymized data, and analysis code for [*Novelty and uncertainty differentially drive exploration across development*](https://elifesciences.org/articles/84260). _eLife._
 
 
 ## Task
