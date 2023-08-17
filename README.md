@@ -1,6 +1,6 @@
 # Novelty and uncertainty differentially drive exploration across development
 
-Tasks, anonymized data, and analysis code for: Nussenbaum, K.+, Martin, R.E.+, et al. Novelty and uncertainty differentially drive exploration across development. [*eLife*](https://elifesciences.org/articles/84260).
+Tasks, anonymized data, and analysis code for: Nussenbaum, K.+, Martin, R.E.+, et al. (2023). Novelty and uncertainty differentially drive exploration across development. [*eLife*](https://elifesciences.org/articles/84260).
 
 
 ## Task
